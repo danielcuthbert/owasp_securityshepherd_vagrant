@@ -5,9 +5,9 @@ The <a href="https://www.owasp.org/index.php/OWASP_Security_Shepherd">OWASP Secu
 This helps you build Security Shepherd into a Vagrant container rather than using the large ova file. It assumes you already have vagrant installed, if not grab it from https://www.vagrantup.com/ before you begin.
 
 ### Some assumptions:
-1: You wish to connect to the container, via localhost on port 8080
-2: You wish to use the standard Tomcat port of 8080 in the container
-3: You are using the default MySQL password of CowSaysMoo for the database
+* You wish to connect to the container, via localhost on port 8080
+* You wish to use the standard Tomcat port of 8080 in the container
+* You are using the default MySQL password of CowSaysMoo for the database
 
 If the above is correct, then you are golden.
 
