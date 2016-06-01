@@ -76,7 +76,7 @@ mysql -u root --password=CowSaysMoo moduleSchemas < moduleSchemas.sql
 
 echo -e "\n--- Pulling down the WAR file and moving into place ---\n"
 cd /var/lib/tomcat7/webapps/ROOT
-curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/ROOT.war" -o ROOT.war
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/ROOT.war" -o ROOT.war /dev/null 2>&1
 service tomcat7 restart
 
 # Set envvars
