@@ -17,7 +17,7 @@ echo -e "\n--- Updating packages list ---\n"
 apt-get -qq update
 
 echo -e "\n--- Install base packages ---\n"
-apt-get -y install vim curl build-essential python-software-properties git > /dev/null 2>&1
+apt-get -y install vim curl build-essential python-software-properties language-pack-en > /dev/null 2>&1
 
 echo -e "\n--- Updating packages list ---\n"
 apt-get -qq update
@@ -25,60 +25,40 @@ apt-get -qq update
 echo -e "\n--- Installing MySQL specific packages and settings ---\n"
 echo "mysql-server mysql-server/root_password password $DBPASSWD" | debconf-set-selections
 echo "mysql-server mysql-server/root_password_again password $DBPASSWD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password $DBPASSWD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/admin-pass password $DBPASSWD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password $DBPASSWD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | debconf-set-selections
 apt-get -y install mysql-server > /dev/null 2>&1
-
-echo -e "\n--- Setting up our MySQL user and db ---\n"
-mysql -uroot -p$DBPASSWD -e "CREATE DATABASE $DBNAME"
-mysql -uroot -p$DBPASSWD -e "grant all privileges on $DBNAME.* to '$DBUSER'@'localhost' identified by '$DBPASSWD'"
-
-echo -e "\n--- Installing Apache2  ---\n"
-apt-get -y install apache2 > /dev/null 2>&1
-
-echo -e "\n--- Setting document root to public directory ---\n"
-rm -rf /var/www
-ln -fs /vagrant/public /var/www
-
-
-echo -e "\n--- Add environment variables to Apache ---\n"
-cat > /etc/apache2/sites-enabled/000-default.conf <<EOF
-<VirtualHost *:80>
-    DocumentRoot /var/www
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-    SetEnv APP_ENV $APPENV
-    SetEnv DB_HOST $DBHOST
-    SetEnv DB_NAME $DBNAME
-    SetEnv DB_USER $DBUSER
-    SetEnv DB_PASS $DBPASSWD
-</VirtualHost>
-EOF
-
-echo -e "\n--- Restarting Apache ---\n"
-service apache2 restart > /dev/null 2>&1
 
 echo -e "\n--- Installing Tomcat  ---\n"
 apt-get -y install tomcat7 tomcat7-admin tomcat7-common > /dev/null 2>&1
+service tomcat7 restart
 
 echo -e "\n--- Pulling down the SQL files, creating databases and importing databases ---\n"
 cd /usr/share/mysql/
-curl "https://raw.github.com/danielcuthbert/owasp_securityshepherd_vagrant/blob/master/coreSchema.sql" -o coreSchema.sql
-curl "https://raw.github.com/danielcuthbert/owasp_securityshepherd_vagrant/blob/master/moduleSchemas.sql" -o moduleSchemas.sql
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/coreSchema.sql" -o coreSchema.sql
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/moduleSchemas.sql" -o moduleSchemas.sql
 mysql -u root --password=CowSaysMoo -e "create database coreSchema"
 mysql -u root --password=CowSaysMoo coreSchema < coreSchema.sql
 mysql -u root --password=CowSaysMoo -e "create database moduleSchemas"
 mysql -u root --password=CowSaysMoo moduleSchemas < moduleSchemas.sql
 
-
 echo -e "\n--- Pulling down the WAR file and moving into place ---\n"
 cd /var/lib/tomcat7/webapps/
 rm -R ROOT
-curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/ROOT.war" -o ROOT.war /dev/null 2>&1
-service tomcat7 restart
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/ROOT.war" -o ROOT.war
+
+echo -e "\n--- Installing MongoDB (this may take a while, be patient!)---\n"
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+apt-get -qq update
+apt-get install -y mongodb-org mongodb-org-server mongodb-org-shell mongodb-org-mongos mongodb-org-tools
+
+echo -e "\n--- Installing MongoDB Schema ---\n"
+export LC_ALL=C
+cd /tmp
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/mongoSchema.js" -o mongoSchema.js
+mongo /tmp/mongoSchema.js
+
+
+
 
 # Set envvars
 export APP_ENV=$APPENV
