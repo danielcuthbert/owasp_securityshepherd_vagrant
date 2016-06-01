@@ -64,7 +64,20 @@ service apache2 restart > /dev/null 2>&1
 echo -e "\n--- Installing Tomcat  ---\n"
 apt-get -y install tomcat7 tomcat7-admin tomcat7-common > /dev/null 2>&1
 
+echo -e "\n--- Pulling down the SQL files, creating databases and importing databases ---\n"
+cd /usr/share/mysql/
+curl "https://raw.github.com/danielcuthbert/owasp_securityshepherd_vagrant/blob/master/coreSchema.sql" -o coreSchema.sql
+curl "https://raw.github.com/danielcuthbert/owasp_securityshepherd_vagrant/blob/master/moduleSchemas.sql" -o moduleSchemas.sql
+mysql -u root --password=CowSaysMoo -e "create database coreSchema"
+mysql -u root --password=CowSaysMoo coreSchema < coreSchema.sql
+mysql -u root --password=CowSaysMoo -e "create database moduleSchemas"
+mysql -u root --password=CowSaysMoo moduleSchemas < moduleSchemas.sql
 
+
+echo -e "\n--- Pulling down the WAR file and moving into place ---\n"
+cd /var/lib/tomcat7/webapps/ROOT
+curl "https://raw.githubusercontent.com/danielcuthbert/owasp_securityshepherd_vagrant/master/ROOT.war" -o ROOT.war
+service tomcat7 restart
 
 # Set envvars
 export APP_ENV=$APPENV
