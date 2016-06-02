@@ -7,8 +7,6 @@
 # Variables
 APPENV=local
 DBHOST=localhost
-DBNAME=dbname
-DBUSER=dbuser
 DBPASSWD=CowSaysMoo
 
 echo -e "\n--- Let's get OWASP Security Shepherd Installed... ---\n"
